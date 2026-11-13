@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f7f7">
+  <title>Thumbnail Archive</title>
+  <meta name="description" content="A chronological archive of thumbnail design work.">
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f7f7;
+      --surface: #ffffff;
+      --surface-2: #eeeeef;
+      --text: #171719;
+      --muted: #77777e;
+      --line: rgba(20,20,25,.09);
+      --shadow: 0 16px 50px rgba(0,0,0,.12);
+      --radius: 16px;
+    }
+    [data-theme="dark"] {
+      color-scheme: dark;
+      --bg: #111113;
+      --surface: #1b1b1f;
+      --surface-2: #29292e;
+      --text: #f4f4f5;
+      --muted: #a0a0a8;
+      --line: rgba(255,255,255,.1);
+      --shadow: 0 18px 55px rgba(0,0,0,.42);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 100px; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 15px/1.5 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      transition: background-color .35s ease, color .35s ease;
+    }
+    button, input { font: inherit; }
+    button { color: inherit; }
+    .page { width: min(1440px, calc(100% - 60px)); margin: 0 auto; }
+    .topbar {
+      position: sticky; top: 0; z-index: 20;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 18px; padding: 15px 0;
+      background: color-mix(in srgb, var(--bg) 88%, transparent);
+      backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--line);
+    }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 750; letter-spacing: -.04em; }
+    .brand-mark { width: 28px; height: 28px; border-radius: 9px; background: var(--text); color: var(--bg); display:grid; place-items:center; font-size: 14px; }
+    .top-actions { display:flex; align-items:center; gap: 10px; }
+    .icon-btn, .pill-btn {
+      border: 1px solid var(--line); background: var(--surface); border-radius: 999px;
+      padding: 9px 14px; cursor: pointer; transition: transform .2s ease, background .25s ease;
+    }
+    .icon-btn { width: 40px; height: 40px; display:grid; place-items:center; padding:0; font-size:17px; }
+    .icon-btn:hover, .pill-btn:hover { transform: translateY(-2px); }
+    .hero { padding: 62px 0 30px; }
+    .eyebrow { color: var(--muted); font-size: 12px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; }
+    h1 { margin: 8px 0 10px; font-size: clamp(48px, 8vw, 88px); line-height: .98; letter-spacing: -.075em; font-weight: 780; }
+    .intro-row { display:flex; align-items:flex-end; justify-content:space-between; gap:24px; }
+    .intro { max-width: 580px; color: var(--muted); font-size: 16px; margin: 0; }
+    .total { text-align:right; flex: 0 0 auto; }
+    .total strong { display:block; font-size: 27px; letter-spacing:-.05em; line-height:1.1; }
+    .total span { color:var(--muted); font-size:12px; }
+    .toolbar { display:flex; align-items:center; justify-content:space-between; gap:14px; padding: 24px 0 30px; }
+    .year-nav { display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
+    .year-link {
+      border:0; border-radius:999px; background:transparent; color:var(--muted);
+      padding:9px 14px; cursor:pointer; transition:background .2s ease,color .2s ease;
+    }
+    .year-link:hover, .year-link.active { background:var(--surface); color:var(--text); box-shadow:0 1px 5px rgba(0,0,0,.07); }
+    .search-wrap { position:relative; width:min(260px, 100%); }
+    .search-wrap span { position:absolute; left:13px; top:9px; color:var(--muted); pointer-events:none; }
+    .search {
+      width:100%; border:1px solid var(--line); outline:none; background:var(--surface);
+      color:var(--text); border-radius:999px; padding:10px 14px 10px 36px;
+    }
+    .search:focus { border-color:var(--muted); }
+    main { padding-bottom:80px; }
+    .year-section { padding: 14px 0 30px; scroll-margin-top: 95px; }
+    .year-heading { display:flex; align-items:baseline; gap:12px; margin: 0 0 18px; }
+    .year-heading h2 { margin:0; font-size: clamp(30px, 4vw, 43px); letter-spacing:-.065em; line-height:1; }
+    .year-count { color:var(--muted); font-size:13px; }
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+    }
+    .thumb-card {
+      position:relative; display:block; width:100%; padding:0; border:0; overflow:hidden;
+      border-radius:var(--radius); aspect-ratio:16 / 9; background:var(--surface-2);
+      cursor:zoom-in; isolation:isolate; transform:translateZ(0);
+      animation: cardIn .55s both;
+    }
+    .thumb-card img {
+      display:block; width:100%; height:100%; object-fit:cover;
+      transition:transform .55s cubic-bezier(.2,.75,.25,1), filter .35s ease;
+    }
+    .thumb-card::after {
+      content:""; position:absolute; inset:0; border:1px solid rgba(0,0,0,.04);
+      border-radius:inherit; pointer-events:none;
+    }
+    .thumb-card:hover img { transform:scale(1.045); filter:brightness(.94); }
+    .thumb-card:focus-visible, button:focus-visible, input:focus-visible { outline:3px solid #6aa7ff; outline-offset:3px; }
+    .empty {
+      padding:52px 24px; text-align:center; border:1px dashed var(--line);
+      border-radius:20px; color:var(--muted); background:var(--surface);
+    }
+    .empty strong { display:block; color:var(--text); font-size:18px; margin-bottom:6px; }
+    .footer { border-top:1px solid var(--line); padding:22px 0 34px; color:var(--muted); font-size:12px; display:flex; justify-content:space-between; gap:12px; }
+    .viewer {
+      position:fixed; inset:0; z-index:50; display:none; align-items:center; justify-content:center;
+      padding: min(5vw, 48px); background:rgba(7,7,10,.94); backdrop-filter:blur(14px);
+    }
+    .viewer.open { display:flex; animation:fadeIn .2s ease both; }
+    .viewer-image-wrap { width:min(1200px, 90vw); height:min(82vh, 850px); display:grid; place-items:center; }
+    .viewer img { max-width:100%; max-height:100%; object-fit:contain; border-radius:10px; box-shadow:0 20px 80px rgba(0,0,0,.35); }
+    .viewer-close, .viewer-arrow {
+      position:absolute; border:1px solid rgba(255,255,255,.2); color:#fff; background:rgba(255,255,255,.1);
+      display:grid; place-items:center; cursor:pointer; backdrop-filter:blur(10px);
+    }
+    .viewer-close { top:22px; right:22px; width:44px; height:44px; border-radius:50%; font-size:24px; }
+    .viewer-arrow { top:50%; transform:translateY(-50%); width:48px; height:58px; border-radius:14px; font-size:26px; }
+    .viewer-arrow.prev { left:20px; } .viewer-arrow.next { right:20px; }
+    .viewer-caption { position:absolute; bottom:20px; left:50%; transform:translateX(-50%); color:rgba(255,255,255,.7); font-size:12px; text-align:center; }
+    @keyframes cardIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+    @media (max-width: 900px) { .gallery { grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; } }
+    @media (max-width: 600px) {
+      .page { width:calc(100% - 30px); }
+      .hero { padding-top:42px; }
+      .intro-row { align-items:flex-start; flex-direction:column; gap:18px; }
+      .total { text-align:left; }
+      .toolbar { align-items:stretch; flex-direction:column; }
+      .search-wrap { width:100%; }
+      .gallery { grid-template-columns:1fr; gap:13px; }
+      .year-section { padding-bottom:22px; }
+      .viewer-arrow { width:40px; height:48px; }
+      .viewer-arrow.prev { left:9px; } .viewer-arrow.next { right:9px; }
+      .footer { flex-direction:column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark">A</span><span>THUMBNAIL ARCHIVE</span></div>
+      <div class="top-actions">
+        <button class="pill-btn" id="allButton" type="button">All work</button>
+        <button class="icon-btn" id="themeButton" type="button" aria-label="Switch to dark mode" title="Switch theme">☾</button>
+      </div>
+    </header>
+
+    <section class="hero">
+      <div class="eyebrow">A visual timeline of my work</div>
+      <h1>Gallery<span style="color:var(--muted)">.</span></h1>
+      <div class="intro-row">
+        <p class="intro">Every thumbnail, every experiment, every era.</p>
+        <div class="total"><strong id="totalCount">—</strong><span>THUMBNAILS IN THE ARCHIVE</span></div>
+      </div>
+    </section>
+
+    <div class="toolbar">
+      <nav class="year-nav" id="yearNav" aria-label="Jump to year">
+        <button class="year-link active" data-year="all" type="button">All years</button>
+      </nav>
+      <label class="search-wrap"><span>⌕</span><input class="search" id="searchInput" type="search" placeholder="Search thumbnails…" aria-label="Search thumbnails"></label>
+    </div>
+
+    <main id="galleryRoot">
+      <div class="empty"><strong>Scanning folders for thumbnails...</strong></div>
+    </main>
+
+    <footer class="footer">
+      <span>THUMBNAIL ARCHIVE</span>
+      <span id="footerCount">A collection of creative work.</span>
+    </footer>
+  </div>
+
+  <div class="viewer" id="viewer" role="dialog" aria-modal="true" aria-label="Thumbnail preview">
+    <button class="viewer-close" id="viewerClose" type="button" aria-label="Close preview">×</button>
+    <button class="viewer-arrow prev" id="viewerPrev" type="button" aria-label="Previous thumbnail">‹</button>
+    <div class="viewer-image-wrap"><img id="viewerImage" alt="Full-size thumbnail"></div>
+    <button class="viewer-arrow next" id="viewerNext" type="button" aria-label="Next thumbnail">›</button>
+    <div class="viewer-caption" id="viewerCaption"></div>
+  </div>
+
+  <script>
+    const YEARS = ["2026", "2025", "2024", "2022"];
+    const EXTENSIONS = ["png", "jpg", "jpeg", "webp"];
+    const root = document.getElementById("galleryRoot");
+    const yearNav = document.getElementById("yearNav");
+    const searchInput = document.getElementById("searchInput");
+    const totalCount = document.getElementById("totalCount");
+    const footerCount = document.getElementById("footerCount");
+    const viewer = document.getElementById("viewer");
+    const viewerImage = document.getElementById("viewerImage");
+    const viewerCaption = document.getElementById("viewerCaption");
+    let allItems = [];
+    let visibleItems = [];
+    let activeYear = "all";
+    let viewerIndex = 0;
+    let lastFocused = null;
+
+    function checkImage(url) {
+      return new Promise(resolve => {
+        const img = new Image();
+        img.onload = () => resolve(url);
+        img.onerror = () => resolve(null);
+        img.src = url;
+      });
+    }
+
+    async function discoverThumbnails() {
+      const foundItems = [];
+      
+      for (const year of YEARS) {
+        let missingStreak = 0;
+        for (let i = 1; i <= 150; i++) {
+          const numStr = String(i).padStart(3, "0");
+          let foundPath = null;
+          
+          for (const ext of EXTENSIONS) {
+            const testPath = `thumbnails/${year}/${numStr}.${ext}`;
+            const result = await checkImage(testPath);
+            if (result) {
+              foundPath = testPath;
+              break;
+            }
+          }
+          
+          if (foundPath) {
+            missingStreak = 0;
+            foundItems.push({
+              year: year,
+              src: foundPath,
+              title: `${year} - Thumbnail ${numStr}`
+            });
+          } else {
+            missingStreak++;
+            if (missingStreak >= 3) break;
+          }
+        }
+      }
+      return foundItems;
+    }
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, char => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[char]));
+    }
+
+    function render() {
+      const query = searchInput.value.trim().toLowerCase();
+      const filtered = allItems.filter(item => {
+        const yearMatch = activeYear === "all" || item.year === activeYear;
+        const queryMatch = !query || (item.title + " " + item.year + " " + item.src).toLowerCase().includes(query);
+        return yearMatch && queryMatch;
+      });
+      visibleItems = filtered;
+      const groups = new Map();
+      filtered.forEach(item => {
+        if (!groups.has(item.year)) groups.set(item.year, []);
+        groups.get(item.year).push(item);
+      });
+      const years = [...groups.keys()].sort((a,b) => b.localeCompare(a, undefined, {numeric:true}));
+      root.innerHTML = "";
+      if (!filtered.length) {
+        root.innerHTML = `<div class="empty"><strong>No thumbnails found.</strong>Try another search or check that your images are in <code>thumbnails/year/001.png</code> format.</div>`;
+        return;
+      }
+      years.forEach(year => {
+        const section = document.createElement("section");
+        section.className = "year-section";
+        section.id = "year-" + year;
+        const heading = document.createElement("div");
+        heading.className = "year-heading";
+        heading.innerHTML = `<h2>${escapeHtml(year)}</h2><span class="year-count">${groups.get(year).length} ${groups.get(year).length === 1 ? "thumbnail" : "thumbnails"}</span>`;
+        const grid = document.createElement("div");
+        grid.className = "gallery";
+        
+        const yearItems = [...groups.get(year)];
+        // To put 001 at the bottom-right, we reverse the items so newest is first and 001 is last
+        const reversed = yearItems.reverse();
+        
+        // Pad the beginning with invisible placeholders if necessary so 001 lands on column 3 (bottom-right)
+        const remainder = reversed.length % 3;
+        const padCount = remainder === 0 ? 0 : 3 - remainder;
+        for (let p = 0; p < padCount; p++) {
+          const emptyCard = document.createElement("div");
+          emptyCard.style.visibility = "hidden"; emptyCard.style.pointerEvents = "none";
+          emptyCard.className = "thumb-card";
+          grid.appendChild(emptyCard);
+        }
+
+        reversed.forEach(item => {
+          const index = visibleItems.indexOf(item);
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "thumb-card";
+          button.setAttribute("aria-label", "Open " + item.title);
+          button.style.animationDelay = Math.min((index % 12) * 35, 385) + "ms";
+          const img = document.createElement("img");
+          img.src = item.src;
+          img.alt = item.title;
+          img.loading = "lazy";
+          img.decoding = "async";
+          button.appendChild(img);
+          button.addEventListener("click", () => openViewer(index));
+          grid.appendChild(button);
+        });
+        section.append(heading, grid);
+        root.appendChild(section);
+      });
+    }
+
+    function renderYearNav() {
+      const years = [...new Set(allItems.map(item => item.year))].sort((a,b) => b.localeCompare(a, undefined, {numeric:true}));
+      yearNav.innerHTML = `<button class="year-link ${activeYear === "all" ? "active" : ""}" data-year="all" type="button">All years</button>`;
+      years.forEach(year => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "year-link" + (activeYear === year ? " active" : "");
+        button.dataset.year = year;
+        button.textContent = year;
+        yearNav.appendChild(button);
+      });
+    }
+
+    function openViewer(index) {
+      if (!visibleItems.length) return;
+      viewerIndex = index;
+      lastFocused = document.activeElement;
+      updateViewer();
+      viewer.classList.add("open");
+      document.body.style.overflow = "hidden";
+      document.getElementById("viewerClose").focus();
+    }
+    function updateViewer() {
+      const item = visibleItems[viewerIndex];
+      if (!item) return;
+      viewerImage.src = item.src;
+      viewerImage.alt = item.title;
+      viewerCaption.textContent = `${item.title} · ${item.year} · ${viewerIndex + 1} of ${visibleItems.length}`;
+    }
+    function closeViewer() {
+      viewer.classList.remove("open");
+      document.body.style.overflow = "";
+      viewerImage.removeAttribute("src");
+      if (lastFocused) lastFocused.focus();
+    }
+    function moveViewer(direction) {
+      if (!visibleItems.length) return;
+      viewerIndex = (viewerIndex + direction + visibleItems.length) % visibleItems.length;
+      updateViewer();
+    }
+
+    yearNav.addEventListener("click", event => {
+      const button = event.target.closest("[data-year]");
+      if (!button) return;
+      activeYear = button.dataset.year;
+      renderYearNav();
+      render();
+      if (activeYear !== "all") {
+        const section = document.getElementById("year-" + activeYear);
+        if (section) section.scrollIntoView({ behavior:"smooth", block:"start" });
+      } else window.scrollTo({ top:0, behavior:"smooth" });
+    });
+    searchInput.addEventListener("input", render);
+    document.getElementById("allButton").addEventListener("click", () => {
+      activeYear = "all"; searchInput.value = ""; renderYearNav(); render();
+      window.scrollTo({ top:0, behavior:"smooth" });
+    });
+    document.getElementById("viewerClose").addEventListener("click", closeViewer);
+    document.getElementById("viewerPrev").addEventListener("click", () => moveViewer(-1));
+    document.getElementById("viewerNext").addEventListener("click", () => moveViewer(1));
+    viewer.addEventListener("click", event => { if (event.target === viewer) closeViewer(); });
+    document.addEventListener("keydown", event => {
+      if (!viewer.classList.contains("open")) return;
+      if (event.key === "Escape") closeViewer();
+      if (event.key === "ArrowLeft") moveViewer(-1);
+      if (event.key === "ArrowRight") moveViewer(1);
+    });
+
+    const themeButton = document.getElementById("themeButton");
+    function setTheme(theme) {
+      document.documentElement.dataset.theme = theme;
+      const dark = theme === "dark";
+      themeButton.textContent = dark ? "☀" : "☾";
+      themeButton.setAttribute("aria-label", dark ? "Switch to light mode" : "Switch to dark mode");
+      document.querySelector('meta[name="theme-color"]').content = dark ? "#111113" : "#f7f7f7";
+    }
+    const savedTheme = localStorage.getItem("thumbnail-archive-theme");
+    setTheme(savedTheme || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"));
+    themeButton.addEventListener("click", () => {
+      const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+      setTheme(next);
+      localStorage.setItem("thumbnail-archive-theme", next);
+    });
+
+    async function init() {
+      try {
+        allItems = await discoverThumbnails();
+        allItems.sort((a,b) => b.year.localeCompare(a.year, undefined, {numeric:true}));
+        totalCount.textContent = allItems.length.toLocaleString();
+        footerCount.textContent = `${allItems.length.toLocaleString()} thumbnails · ${new Set(allItems.map(x => x.year)).size} years`;
+        renderYearNav();
+        render();
+      } catch (error) {
+        totalCount.textContent = "0";
+        footerCount.textContent = "No thumbnails discovered.";
+      }
+    }
+    init();
+  </script>
+</body>
+</html>
